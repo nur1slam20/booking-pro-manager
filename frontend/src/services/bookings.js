@@ -2,7 +2,7 @@ import api from './api.js';
 
 export const bookingsApi = {
   async create(bookingData) {
-    const response = await api.post('/api/bookings', {
+    const response = await api.post('/bookings', {
       serviceId: bookingData.serviceId,
       date: bookingData.date,
       time: bookingData.time,
@@ -11,7 +11,7 @@ export const bookingsApi = {
   },
 
   async getMy() {
-    const response = await api.get('/api/bookings/my');
+    const response = await api.get('/bookings/my');
     return response.data;
   },
 };
