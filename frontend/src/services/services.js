@@ -21,6 +21,11 @@ export const servicesApi = {
     return response.data;
   },
 
+  async toggleActive(id) {
+    const response = await api.patch(`/services/${id}/toggle-active`);
+    return response.data;
+  },
+
   async delete(id) {
     await api.delete(`/services/${id}`);
   },

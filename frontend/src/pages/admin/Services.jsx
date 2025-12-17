@@ -162,6 +162,7 @@ function AdminServices() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Название</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Цена</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Длительность</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Статус</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Действия</th>
             </tr>
           </thead>
@@ -172,12 +173,40 @@ function AdminServices() {
                 <td className="px-6 py-4 text-sm text-gray-900">{service.title}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{service.price} ₸</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{service.duration} мин</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      service.is_active === false
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-green-100 text-green-800'
+                    }`}
+                  >
+                    {service.is_active === false ? 'Неактивна' : 'Активна'}
+                  </span>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                   <button
                     onClick={() => handleEdit(service)}
                     className="text-blue-600 hover:text-blue-900"
                   >
                     Редактировать
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await servicesApi.toggleActive(service.id);
+                        loadServices();
+                      } catch (err) {
+                        alert('Ошибка изменения статуса');
+                      }
+                    }}
+                    className={`${
+                      service.is_active === false
+                        ? 'text-green-600 hover:text-green-900'
+                        : 'text-yellow-600 hover:text-yellow-900'
+                    }`}
+                  >
+                    {service.is_active === false ? 'Включить' : 'Выключить'}
                   </button>
                   <button
                     onClick={() => handleDelete(service.id)}

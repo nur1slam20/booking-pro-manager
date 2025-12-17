@@ -21,6 +21,8 @@ function App() {
 
   const handleLogin = (userData) => {
     setUser(userData);
+    // Обновляем user в localStorage
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const handleLogout = () => {

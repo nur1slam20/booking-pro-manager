@@ -23,12 +23,13 @@ function AdminBookings() {
     }
   };
 
-  const handleStatusChange = async (id, newStatus) => {
+  const handleStatusChange = async (id, newStatus, adminComment = '') => {
     try {
-      await bookingsApi.updateStatus(id, newStatus);
+      const comment = adminComment || prompt('Комментарий (необязательно):');
+      await bookingsApi.updateStatus(id, newStatus, comment || null);
       loadBookings();
     } catch (err) {
-      alert('Ошибка обновления статуса');
+      alert('Ошибка обновления статуса: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -63,6 +64,8 @@ function AdminBookings() {
           <option value="pending">Pending</option>
           <option value="confirmed">Confirmed</option>
           <option value="rejected">Rejected</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
         </select>
       </div>
 
@@ -76,6 +79,7 @@ function AdminBookings() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Дата</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Время</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Статус</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Комментарий</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Действия</th>
             </tr>
           </thead>
@@ -94,27 +98,42 @@ function AdminBookings() {
                         ? 'bg-green-100 text-green-800'
                         : booking.status === 'rejected'
                         ? 'bg-red-100 text-red-800'
+                        : booking.status === 'completed'
+                        ? 'bg-purple-100 text-purple-800'
+                        : booking.status === 'cancelled'
+                        ? 'bg-gray-100 text-gray-800'
                         : 'bg-yellow-100 text-yellow-800'
                     }`}
                   >
                     {booking.status}
                   </span>
                 </td>
+                <td className="px-6 py-4 text-sm text-gray-600">
+                  {booking.admin_comment || '-'}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                  {booking.status !== 'confirmed' && (
-                    <button
-                      onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                      className="text-green-600 hover:text-green-900"
-                    >
-                      Подтвердить
-                    </button>
+                  {booking.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                        className="text-green-600 hover:text-green-900"
+                      >
+                        Подтвердить
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(booking.id, 'rejected')}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Отклонить
+                      </button>
+                    </>
                   )}
-                  {booking.status !== 'rejected' && (
+                  {booking.status === 'confirmed' && (
                     <button
-                      onClick={() => handleStatusChange(booking.id, 'rejected')}
-                      className="text-red-600 hover:text-red-900"
+                      onClick={() => handleStatusChange(booking.id, 'completed')}
+                      className="text-purple-600 hover:text-purple-900"
                     >
-                      Отклонить
+                      Завершить
                     </button>
                   )}
                   <button

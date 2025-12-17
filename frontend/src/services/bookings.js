@@ -15,13 +15,31 @@ export const bookingsApi = {
     return response.data;
   },
 
+  async getMyStats() {
+    const response = await api.get('/bookings/my/stats');
+    return response.data;
+  },
+
+  async getById(id) {
+    const response = await api.get(`/bookings/${id}`);
+    return response.data;
+  },
+
   async getAll() {
     const response = await api.get('/bookings');
     return response.data;
   },
 
-  async updateStatus(id, status) {
-    const response = await api.put(`/bookings/${id}`, { status });
+  async getAdminStats() {
+    const response = await api.get('/bookings/admin/stats');
+    return response.data;
+  },
+
+  async updateStatus(id, status, adminComment = null) {
+    const response = await api.put(`/bookings/${id}/status`, { 
+      status,
+      adminComment,
+    });
     return response.data;
   },
 
