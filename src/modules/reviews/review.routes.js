@@ -110,5 +110,50 @@ router.get('/:id', getReviewController);
 router.put('/:id', authMiddleware, updateReviewController);
 router.delete('/:id', authMiddleware, deleteReviewController);
 
+/**
+ * @swagger
+ * /api/reviews/{id}/helpful:
+ *   post:
+ *     summary: Оценить полезность отзыва (user)
+ *     tags: [Reviews]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [isHelpful]
+ *             properties:
+ *               isHelpful: { type: boolean }
+ *     responses:
+ *       200:
+ *         description: Оценка добавлена
+ */
+router.post('/:id/helpful', authMiddleware, markReviewHelpfulController);
+router.get('/:id/helpful', authMiddleware, getReviewHelpfulStatusController);
+
+/**
+ * @swagger
+ * /api/reviews/rating-distribution:
+ *   get:
+ *     summary: Получить распределение рейтингов
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: query
+ *         name: masterId
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: serviceId
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Распределение рейтингов
+ */
+router.get('/rating-distribution', getRatingDistributionController);
+
 export default router;
 

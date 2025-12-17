@@ -8,11 +8,13 @@ function MasterReviews({ masterId }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(null);
+  const [ratingDistribution, setRatingDistribution] = useState([]);
 
   useEffect(() => {
     if (masterId) {
       loadReviews();
       loadRating();
+      loadRatingDistribution();
     }
   }, [masterId]);
 
@@ -36,6 +38,15 @@ function MasterReviews({ masterId }) {
     }
   };
 
+  const loadRatingDistribution = async () => {
+    try {
+      const data = await reviewsApi.getRatingDistribution(masterId);
+      setRatingDistribution(data);
+    } catch (err) {
+      console.error('Ошибка загрузки распределения:', err);
+    }
+  };
+
   if (loading) {
     return <div className="text-sm text-gray-500">Загрузка отзывов...</div>;
   }
@@ -56,6 +67,36 @@ function MasterReviews({ masterId }) {
               ({rating.total_reviews} {rating.total_reviews === 1 ? 'отзыв' : rating.total_reviews < 5 ? 'отзыва' : 'отзывов'})
             </span>
           </div>
+
+          {/* График распределения рейтингов */}
+          {ratingDistribution.length > 0 && (
+            <div className="mb-3 bg-gray-50 p-3 rounded">
+              <p className="text-xs font-semibold mb-2 text-gray-700">Распределение оценок:</p>
+              <div className="space-y-1">
+                {[5, 4, 3, 2, 1].map((star) => {
+                  const dist = ratingDistribution.find(d => d.rating === star);
+                  const count = dist ? dist.count : 0;
+                  const percentage = rating.total_reviews > 0 
+                    ? (count / rating.total_reviews) * 100 
+                    : 0;
+                  
+                  return (
+                    <div key={star} className="flex items-center gap-2">
+                      <span className="text-xs w-8">{star} ⭐</span>
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-yellow-500 h-2 rounded-full"
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs text-gray-600 w-8">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {moderatedReviews.length > 0 ? (
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {moderatedReviews.slice(0, 3).map((review) => (
@@ -74,9 +115,25 @@ function MasterReviews({ masterId }) {
                     <span className="text-xs text-gray-500">
                       {review.user_name || 'Пользователь'}
                     </span>
+                    {review.booking_id && (
+                      <span className="text-xs bg-green-100 text-green-700 px-1 rounded">
+                        ✓
+                      </span>
+                    )}
                   </div>
                   {review.comment && (
-                    <p className="text-gray-700 text-xs">{review.comment}</p>
+                    <p className="text-gray-700 text-xs mb-1">{review.comment}</p>
+                  )}
+                  {review.reply && (
+                    <div className="bg-blue-50 border-l-2 border-blue-400 pl-2 mt-1">
+                      <p className="text-xs text-blue-700 font-semibold">Ответ:</p>
+                      <p className="text-xs text-gray-600">{review.reply}</p>
+                    </div>
+                  )}
+                  {review.helpful_count > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      👍 {review.helpful_count} {review.helpful_count === 1 ? 'человеку' : 'людям'} полезно
+                    </p>
                   )}
                 </div>
               ))}

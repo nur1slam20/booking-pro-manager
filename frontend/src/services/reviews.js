@@ -42,5 +42,26 @@ export const reviewsApi = {
   async delete(id) {
     await api.delete(`/reviews/${id}`);
   },
+
+  async markHelpful(id, isHelpful) {
+    const response = await api.post(`/reviews/${id}/helpful`, { isHelpful });
+    return response.data;
+  },
+
+  async getHelpfulStatus(id) {
+    const response = await api.get(`/reviews/${id}/helpful`);
+    return response.data;
+  },
+
+  async getRatingDistribution(masterId = null, serviceId = null) {
+    let url = '/reviews/rating-distribution';
+    const params = [];
+    if (masterId) params.push(`masterId=${masterId}`);
+    if (serviceId) params.push(`serviceId=${serviceId}`);
+    if (params.length > 0) url += '?' + params.join('&');
+    
+    const response = await api.get(url);
+    return response.data;
+  },
 };
 

@@ -3,6 +3,7 @@ import { Routes, Route, Link, Navigate } from 'react-router-dom';
 import AdminServices from './Services';
 import AdminBookings from './Bookings';
 import AdminUsers from './Users';
+import AdminReviews from './Reviews';
 import { bookingsApi } from '../../services/bookings';
 
 function Dashboard() {
@@ -76,19 +77,26 @@ function Dashboard() {
           >
             Бронирования
           </Link>
-          <Link
-            to="/admin/users"
-            className="text-blue-600 hover:underline font-medium"
-          >
-            Пользователи
-          </Link>
-        </nav>
-        <Routes>
-          <Route index element={<Navigate to="/admin/services" replace />} />
-          <Route path="services" element={<AdminServices />} />
-          <Route path="bookings" element={<AdminBookings />} />
-          <Route path="users" element={<AdminUsers />} />
-        </Routes>
+              <Link
+                to="/admin/users"
+                className="text-blue-600 hover:underline font-medium"
+              >
+                Пользователи
+              </Link>
+              <Link
+                to="/admin/reviews"
+                className="text-blue-600 hover:underline font-medium"
+              >
+                Отзывы
+              </Link>
+            </nav>
+            <Routes>
+              <Route index element={<Navigate to="/admin/services" replace />} />
+              <Route path="services" element={<AdminServices />} />
+              <Route path="bookings" element={<AdminBookings />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="reviews" element={<AdminReviews />} />
+            </Routes>
       </div>
     </div>
   );

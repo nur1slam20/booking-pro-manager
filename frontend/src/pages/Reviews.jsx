@@ -3,6 +3,169 @@ import { reviewsApi } from '../services/reviews';
 import { bookingsApi } from '../services/bookings';
 import { authService } from '../services/auth';
 
+// Компонент карточки отзыва с улучшениями
+function ReviewCard({ review, filter, onDelete }) {
+  const [helpfulStatus, setHelpfulStatus] = useState(null);
+  const [helpfulCount, setHelpfulCount] = useState(review.helpful_count || 0);
+  const [notHelpfulCount, setNotHelpfulCount] = useState(review.not_helpful_count || 0);
+  const user = authService.getCurrentUser();
+
+  useEffect(() => {
+    if (user && review.id) {
+      loadHelpfulStatus();
+    }
+  }, [review.id, user]);
+
+  const loadHelpfulStatus = async () => {
+    try {
+      const status = await reviewsApi.getHelpfulStatus(review.id);
+      setHelpfulStatus(status);
+    } catch (err) {
+      // Тихая ошибка
+    }
+  };
+
+  const handleHelpful = async (isHelpful) => {
+    if (!user) {
+      alert('Войдите, чтобы оценить отзыв');
+      return;
+    }
+
+    try {
+      await reviewsApi.markHelpful(review.id, isHelpful);
+      setHelpfulStatus({ is_helpful: isHelpful });
+      
+      if (isHelpful) {
+        setHelpfulCount(prev => prev + (helpfulStatus === null ? 1 : (helpfulStatus.is_helpful === false ? 2 : 0)));
+        if (helpfulStatus?.is_helpful === false) {
+          setNotHelpfulCount(prev => prev - 1);
+        }
+      } else {
+        setNotHelpfulCount(prev => prev + (helpfulStatus === null ? 1 : (helpfulStatus.is_helpful === true ? 2 : 0)));
+        if (helpfulStatus?.is_helpful === true) {
+          setHelpfulCount(prev => prev - 1);
+        }
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Ошибка оценки отзыва');
+    }
+  };
+
+  return (
+    <div className="bg-white p-4 rounded-lg shadow-md">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span
+                  key={star}
+                  className={star <= review.rating ? 'text-yellow-500' : 'text-gray-300'}
+                >
+                  ⭐
+                </span>
+              ))}
+            </div>
+            <span className="text-sm text-gray-500">
+              {new Date(review.created_at).toLocaleDateString('ru-RU')}
+            </span>
+            {review.booking_id && (
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                ✓ Проверенный отзыв
+              </span>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2 mb-2">
+            {review.service_title && (
+              <p className="font-semibold">{review.service_title}</p>
+            )}
+            {review.master_name && (
+              <span className="text-sm text-gray-500">• Мастер: {review.master_name}</span>
+            )}
+          </div>
+          
+          <p className="text-sm text-gray-600 mb-2">
+            {review.user_name || 'Пользователь'}
+          </p>
+          
+          {review.comment && (
+            <p className="text-gray-700 mb-3">{review.comment}</p>
+          )}
+
+          {/* Ответ на отзыв */}
+          {review.reply && (
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded mb-3">
+              <p className="text-sm font-semibold text-blue-700 mb-1">
+                Ответ {review.reply_by_name || 'администратора'}:
+              </p>
+              <p className="text-gray-700 text-sm">{review.reply}</p>
+              {review.reply_at && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {new Date(review.reply_at).toLocaleDateString('ru-RU')}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Полезность отзыва */}
+          {filter === 'all' && (
+            <div className="flex items-center gap-4 mt-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleHelpful(true)}
+                  className={`text-sm px-2 py-1 rounded ${
+                    helpfulStatus?.is_helpful === true
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-600 hover:bg-green-50'
+                  }`}
+                >
+                  👍 Полезно ({helpfulCount})
+                </button>
+                <button
+                  onClick={() => handleHelpful(false)}
+                  className={`text-sm px-2 py-1 rounded ${
+                    helpfulStatus?.is_helpful === false
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-gray-100 text-gray-600 hover:bg-red-50'
+                  }`}
+                >
+                  👎 Не полезно ({notHelpfulCount})
+                </button>
+              </div>
+            </div>
+          )}
+
+          {review.is_moderated === false && filter === 'my' && (
+            <p className="text-sm text-yellow-600 mt-2">⏳ Ожидает модерации</p>
+          )}
+          
+          {filter === 'my' && (
+            <div className="mt-2 flex gap-2">
+              <button
+                onClick={async () => {
+                  if (confirm('Редактировать отзыв?')) {
+                    alert('Функция редактирования в разработке');
+                  }
+                }}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Редактировать
+              </button>
+              <button
+                onClick={onDelete}
+                className="text-sm text-red-600 hover:underline"
+              >
+                Удалить
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Reviews() {
   const [completedBookings, setCompletedBookings] = useState([]);
   const [myReviews, setMyReviews] = useState([]);
@@ -192,72 +355,22 @@ function Reviews() {
           </h3>
           <div className="space-y-4">
             {displayedReviews.map((review) => (
-              <div key={review.id} className="bg-white p-4 rounded-lg shadow-md">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <span
-                            key={star}
-                            className={star <= review.rating ? 'text-yellow-500' : 'text-gray-300'}
-                          >
-                            ⭐
-                          </span>
-                        ))}
-                      </div>
-                      <span className="text-sm text-gray-500">
-                        {new Date(review.created_at).toLocaleDateString('ru-RU')}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 mb-2">
-                      {review.service_title && (
-                        <p className="font-semibold">{review.service_title}</p>
-                      )}
-                      {review.master_name && (
-                        <span className="text-sm text-gray-500">• Мастер: {review.master_name}</span>
-                      )}
-                    </div>
-                    {review.comment && (
-                      <p className="text-gray-700 mb-2">{review.comment}</p>
-                    )}
-                    {review.is_moderated === false && filter === 'my' && (
-                      <p className="text-sm text-yellow-600 mt-2">⏳ Ожидает модерации</p>
-                    )}
-                    {filter === 'my' && (
-                      <div className="mt-2 flex gap-2">
-                        <button
-                          onClick={async () => {
-                            if (confirm('Редактировать отзыв?')) {
-                              // Можно добавить редактирование
-                              alert('Функция редактирования в разработке');
-                            }
-                          }}
-                          className="text-sm text-blue-600 hover:underline"
-                        >
-                          Редактировать
-                        </button>
-                        <button
-                          onClick={async () => {
-                            if (confirm('Удалить отзыв?')) {
-                              try {
-                                await reviewsApi.delete(review.id);
-                                loadData();
-                                alert('Отзыв удален');
-                              } catch (err) {
-                                alert('Ошибка удаления отзыва');
-                              }
-                            }
-                          }}
-                          className="text-sm text-red-600 hover:underline"
-                        >
-                          Удалить
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <ReviewCard 
+                key={review.id} 
+                review={review} 
+                filter={filter}
+                onDelete={async () => {
+                  if (confirm('Удалить отзыв?')) {
+                    try {
+                      await reviewsApi.delete(review.id);
+                      loadData();
+                      alert('Отзыв удален');
+                    } catch (err) {
+                      alert('Ошибка удаления отзыва');
+                    }
+                  }
+                }}
+              />
             ))}
           </div>
         </div>

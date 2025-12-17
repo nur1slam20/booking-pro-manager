@@ -5,6 +5,8 @@ import {
   updateReviewService,
   deleteReviewService,
   getAverageRatingService,
+  markReviewHelpfulService,
+  getReviewRatingDistributionService,
 } from './review.service.js';
 
 export async function getReviewsController(req, res, next) {
@@ -63,6 +65,43 @@ export async function getAverageRatingController(req, res, next) {
     const serviceId = req.query.serviceId ? Number(req.query.serviceId) : null;
     const rating = await getAverageRatingService(masterId, serviceId);
     res.json(rating);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function markReviewHelpfulController(req, res, next) {
+  try {
+    const { isHelpful } = req.body;
+    const result = await markReviewHelpfulService(
+      Number(req.params.id),
+      req.user.id,
+      isHelpful === true,
+    );
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getRatingDistributionController(req, res, next) {
+  try {
+    const masterId = req.query.masterId ? Number(req.query.masterId) : null;
+    const serviceId = req.query.serviceId ? Number(req.query.serviceId) : null;
+    const distribution = await getReviewRatingDistributionService(masterId, serviceId);
+    res.json(distribution);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getReviewHelpfulStatusController(req, res, next) {
+  try {
+    const status = await getReviewHelpfulStatusService(
+      Number(req.params.id),
+      req.user.id,
+    );
+    res.json(status);
   } catch (err) {
     next(err);
   }

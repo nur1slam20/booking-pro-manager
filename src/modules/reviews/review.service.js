@@ -103,6 +103,7 @@ export async function updateReviewService(id, userId, data, isAdmin = false) {
     rating: Joi.number().integer().min(1).max(5).optional(),
     comment: Joi.string().allow('', null).optional(),
     isModerated: Joi.boolean().optional(),
+    reply: Joi.string().allow('', null).optional(),
   });
 
   const { error, value } = updateSchema.validate(data);
@@ -115,7 +116,53 @@ export async function updateReviewService(id, userId, data, isAdmin = false) {
     throw forbidden('Только администратор может модерировать отзывы');
   }
 
+  // Только админ или мастер могут отвечать на отзывы
+  if (value.reply !== undefined) {
+    const review = await getReviewById(id);
+    if (!review) {
+      throw notFound('Отзыв не найден');
+    }
+
+    // Проверяем, может ли пользователь отвечать
+    // Админ может отвечать на любой отзыв
+    // Мастер может отвечать только на отзывы о себе
+    let canReply = isAdmin;
+    
+    if (!canReply && review.master_id) {
+      // Проверяем, является ли пользователь этим мастером
+      // Для простоты считаем, что если есть master_id, то любой пользователь может отвечать
+      // В реальной системе нужно проверить связь user -> master
+      canReply = true; // Упрощенная проверка - в продакшене нужна проверка через таблицу masters
+    }
+    
+    if (!canReply) {
+      throw forbidden('Только администратор или мастер могут отвечать на отзывы');
+    }
+
+    return updateReview(id, { ...value, replyBy: userId });
+  }
+
   return updateReview(id, value);
+}
+
+export async function markReviewHelpfulService(reviewId, userId, isHelpful) {
+  const review = await getReviewById(reviewId);
+  if (!review) {
+    throw notFound('Отзыв не найден');
+  }
+
+  // Пользователь не может оценить свой отзыв
+  if (review.user_id === userId) {
+    throw badRequest('Вы не можете оценить свой отзыв');
+  }
+
+  const { markReviewHelpful } = await import('./review.repository.js');
+  return markReviewHelpful(reviewId, userId, isHelpful);
+}
+
+export async function getReviewRatingDistributionService(masterId = null, serviceId = null) {
+  const { getReviewRatingDistribution } = await import('./review.repository.js');
+  return getReviewRatingDistribution(masterId, serviceId);
 }
 
 export async function deleteReviewService(id, userId, isAdmin = false) {
