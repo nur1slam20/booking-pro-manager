@@ -284,20 +284,33 @@ export async function getAvailableTimeSlots(masterId, date, serviceDuration = 60
   const bookedTimes = new Set(booked.rows.map(r => r.time));
 
   // Генерируем слоты с интервалом serviceDuration минут
-  const start = new Date(`2000-01-01 ${start_time}`);
-  const end = new Date(`2000-01-01 ${end_time}`);
-  const slotDuration = serviceDuration;
+  // PostgreSQL TIME возвращается как строка "HH:MM:SS"
+  const startParts = start_time.split(':').map(Number);
+  const endParts = end_time.split(':').map(Number);
+  
+  let currentHour = startParts[0];
+  let currentMin = startParts[1];
+  const endHour = endParts[0];
+  const endMin = endParts[1];
 
-  let current = new Date(start);
-  while (current < end) {
-    const timeStr = `${String(current.getHours()).padStart(2, '0')}:${String(current.getMinutes()).padStart(2, '0')}`;
-    const slotEnd = new Date(current.getTime() + slotDuration * 60000);
-
-    if (slotEnd <= end && !bookedTimes.has(timeStr)) {
-      slots.push(timeStr);
+  while (currentHour < endHour || (currentHour === endHour && currentMin < endMin)) {
+    const timeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`;
+    
+    // Проверяем, что слот помещается в расписание
+    const slotEndMin = currentMin + serviceDuration;
+    const slotEndHour = currentHour + Math.floor(slotEndMin / 60);
+    const slotEndMinFinal = slotEndMin % 60;
+    
+    if (slotEndHour < endHour || (slotEndHour === endHour && slotEndMinFinal <= endMin)) {
+      if (!bookedTimes.has(timeStr)) {
+        slots.push(timeStr);
+      }
     }
 
-    current = new Date(current.getTime() + slotDuration * 60000);
+    // Переходим к следующему слоту
+    currentMin += serviceDuration;
+    currentHour += Math.floor(currentMin / 60);
+    currentMin = currentMin % 60;
   }
 
   return slots;
