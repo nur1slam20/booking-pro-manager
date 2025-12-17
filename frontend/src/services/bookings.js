@@ -1,7 +1,5 @@
 import api from './api.js';
 
-import api from './api.js';
-
 export const bookingsApi = {
   async create(bookingData) {
     const response = await api.post('/bookings', {
