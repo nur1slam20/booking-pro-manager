@@ -13,6 +13,9 @@ import userRouter from './modules/users/user.routes.js';
 import serviceRouter from './modules/services/service.routes.js';
 import bookingRouter from './modules/bookings/booking.routes.js';
 import categoryRouter from './modules/categories/category.routes.js';
+import masterRouter from './modules/masters/master.routes.js';
+import reviewRouter from './modules/reviews/review.routes.js';
+import aiRouter from './modules/ai/ai.routes.js';
 
 dotenv.config();
 
@@ -104,7 +107,10 @@ app.get('/', (req, res) => {
       users: '/api/users',
       categories: '/api/categories',
       services: '/api/services',
+      masters: '/api/masters',
       bookings: '/api/bookings',
+      reviews: '/api/reviews',
+      ai: '/api/ai',
     },
   });
 });
@@ -114,7 +120,10 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/services', serviceRouter);
+app.use('/api/masters', masterRouter);
 app.use('/api/bookings', bookingRouter);
+app.use('/api/reviews', reviewRouter);
+app.use('/api/ai', aiRouter);
 
 // 404 для неизвестных роутов
 app.use((req, res) => {

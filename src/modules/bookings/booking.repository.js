@@ -1,29 +1,38 @@
 import pool from '../../config/database.js';
 
-export async function createBooking({ userId, serviceId, date, time }) {
+export async function createBooking({ userId, serviceId, date, time, masterId = null }) {
   const result = await pool.query(
-    `INSERT INTO bookings (user_id, service_id, date, time)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO bookings (user_id, service_id, date, time, master_id)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING *`,
-    [userId, serviceId, date, time],
+    [userId, serviceId, date, time, masterId],
   );
   return result.rows[0];
 }
 
 // Проверка конфликта бронирований (двойное бронирование)
-export async function checkBookingConflict(date, time, serviceId, excludeBookingId = null) {
+export async function checkBookingConflict(date, time, serviceId, masterId = null, excludeBookingId = null) {
   let query = `
     SELECT COUNT(*)::int AS count
     FROM bookings
     WHERE date = $1 
-      AND time = $2 
-      AND service_id = $3
+      AND time = $2
       AND status IN ('pending', 'confirmed')
   `;
-  const params = [date, time, serviceId];
+  const params = [date, time];
+  
+  // Если указан мастер, проверяем конфликт по мастеру
+  if (masterId) {
+    query += ' AND master_id = $3';
+    params.push(masterId);
+  } else {
+    // Иначе проверяем по услуге
+    query += ' AND service_id = $3';
+    params.push(serviceId);
+  }
   
   if (excludeBookingId) {
-    query += ' AND id != $4';
+    query += ` AND id != $${params.length + 1}`;
     params.push(excludeBookingId);
   }
   
@@ -40,10 +49,14 @@ export async function getBookingWithDetails(id) {
             u.phone AS user_phone,
             s.title AS service_title,
             s.price AS service_price,
-            s.duration AS service_duration
+            s.duration AS service_duration,
+            m.name AS master_name,
+            m.photo AS master_photo,
+            m.rating AS master_rating
      FROM bookings b
      JOIN users u ON u.id = b.user_id
      JOIN services s ON s.id = b.service_id
+     LEFT JOIN masters m ON m.id = b.master_id
      WHERE b.id = $1`,
     [id],
   );
@@ -146,9 +159,13 @@ export async function getBookingStatusHistory(bookingId) {
 
 export async function getUserBookings(userId) {
   const result = await pool.query(
-    `SELECT b.*, s.title AS service_title
+    `SELECT b.*, 
+            s.title AS service_title,
+            m.name AS master_name,
+            m.photo AS master_photo
      FROM bookings b
      JOIN services s ON s.id = b.service_id
+     LEFT JOIN masters m ON m.id = b.master_id
      WHERE b.user_id = $1
      ORDER BY b.date DESC, b.time DESC`,
     [userId],
@@ -166,10 +183,15 @@ export async function getAllBookings({ status }) {
   }
 
   const result = await pool.query(
-    `SELECT b.*, u.name AS user_name, s.title AS service_title
+    `SELECT b.*, 
+            u.name AS user_name, 
+            s.title AS service_title,
+            m.name AS master_name,
+            m.photo AS master_photo
      FROM bookings b
      JOIN users u ON u.id = b.user_id
      JOIN services s ON s.id = b.service_id
+     LEFT JOIN masters m ON m.id = b.master_id
      ${where}
      ORDER BY b.date DESC, b.time DESC`,
     params,

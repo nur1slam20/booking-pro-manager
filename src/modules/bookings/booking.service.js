@@ -21,6 +21,7 @@ const createBookingSchema = Joi.object({
   serviceId: Joi.number().integer().required(),
   date: Joi.date().min('now').required(),
   time: Joi.string().pattern(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/).required(),
+  masterId: Joi.number().integer().allow(null).optional(),
 });
 
 export async function createBookingService(userId, data) {
@@ -47,8 +48,27 @@ export async function createBookingService(userId, data) {
     throw badRequest('Эта услуга временно недоступна');
   }
 
+  // Если указан мастер, проверяем его доступность
+  if (value.masterId) {
+    const { checkMasterAvailability } = await import('../masters/master.repository.js');
+    const availability = await checkMasterAvailability(value.masterId, value.date, value.time);
+    
+    if (!availability.available) {
+      throw badRequest(availability.reason || 'Мастер недоступен в это время');
+    }
+
+    // Проверяем, что мастер работает с этой услугой
+    const { getMasterServices } = await import('../masters/master.repository.js');
+    const masterServices = await getMasterServices(value.masterId);
+    const hasService = masterServices.some(s => s.id === value.serviceId);
+    
+    if (!hasService) {
+      throw badRequest('Этот мастер не предоставляет данную услугу');
+    }
+  }
+
   // Проверяем конфликт бронирований
-  const hasConflict = await checkBookingConflict(value.date, value.time, value.serviceId);
+  const hasConflict = await checkBookingConflict(value.date, value.time, value.serviceId, value.masterId);
   if (hasConflict) {
     throw badRequest('Это время уже занято. Выберите другое время.');
   }
@@ -58,6 +78,7 @@ export async function createBookingService(userId, data) {
     serviceId: value.serviceId,
     date: value.date,
     time: value.time,
+    masterId: value.masterId || null,
   });
 }
 
