@@ -251,6 +251,13 @@ function Home() {
                   </Link>
                 )}
               </div>
+              <Link
+                to="/masters"
+                className="text-blue-600 text-sm hover:underline mt-2 block text-center"
+              >
+                Посмотреть мастеров →
+              </Link>
+              </div>
             </div>
           ))}
         </div>
