@@ -11,7 +11,9 @@ function Header({ user, onLogout }) {
           <nav className="flex gap-4 items-center">
             {user ? (
               <>
+                <Link to="/masters" className="hover:underline">Мастера</Link>
                 <Link to="/bookings" className="hover:underline">Мои бронирования</Link>
+                <Link to="/reviews" className="hover:underline">Отзывы</Link>
                 <Link to="/profile" className="hover:underline">Профиль</Link>
                 {user.role === 'admin' && (
                   <Link to="/admin" className="hover:underline">Админ-панель</Link>
