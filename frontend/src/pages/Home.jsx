@@ -12,49 +12,15 @@ function ServiceRating({ serviceId }) {
   const [rating, setRating] = useState(null);
 
   useEffect(() => {
-    loadRating();
-  }, [serviceId]);
-
-  const loadRating = async () => {
-    try {
-      const data = await reviewsApi.getAverageRating(null, serviceId);
-      if (data.total_reviews > 0) {
-        setRating(data);
-      }
-    } catch (err) {
-      // Тихая ошибка
+    if (serviceId) {
+      loadRating();
     }
-  };
-
-  if (!rating || rating.total_reviews === 0) {
-    return null;
-  }
-
-  return (
-    <div className="flex items-center gap-2 mb-3 text-sm">
-      <div className="flex items-center">
-        <span className="text-yellow-500">⭐</span>
-        <span className="font-semibold ml-1">{Number(rating.average_rating).toFixed(1)}</span>
-      </div>
-      <span className="text-gray-500">
-        ({rating.total_reviews} {rating.total_reviews === 1 ? 'отзыв' : rating.total_reviews < 5 ? 'отзыва' : 'отзывов'})
-      </span>
-    </div>
-  );
-}
-
-// Компонент для отображения рейтинга услуги
-function ServiceRating({ serviceId }) {
-  const [rating, setRating] = useState(null);
-
-  useEffect(() => {
-    loadRating();
   }, [serviceId]);
 
   const loadRating = async () => {
     try {
       const data = await reviewsApi.getAverageRating(null, serviceId);
-      if (data.total_reviews > 0) {
+      if (data && data.total_reviews > 0) {
         setRating(data);
       }
     } catch (err) {
