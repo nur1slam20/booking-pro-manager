@@ -77,6 +77,34 @@ function Home() {
 
   return (
     <div>
+      {/* Призыв к регистрации/входу для неавторизованных пользователей */}
+      {!user && (
+        <div className="mb-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-lg shadow-lg">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold mb-2">Добро пожаловать в Booking Pro!</h2>
+              <p className="text-blue-100">
+                Зарегистрируйтесь или войдите, чтобы забронировать услуги и отслеживать свои бронирования
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Link
+                to="/register"
+                className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
+              >
+                Регистрация
+              </Link>
+              <Link
+                to="/login"
+                className="bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-900 transition-colors border-2 border-white"
+              >
+                Войти
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {user && stats && (
         <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-4">Моя статистика</h2>
