@@ -69,3 +69,4 @@ curl https://booking-pro-api.onrender.com/api/services
 
 **После добавления услуг они появятся на frontend!** ✅
 
+

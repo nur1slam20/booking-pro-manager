@@ -64,3 +64,4 @@ curl https://booking-pro-api.onrender.com/health
 **ВАЖНО:** Используйте **реальный URL**, который показан в ошибке: 
 `https://booking-pro-manager-n8edt7m1f-nur1slam20s-projects.vercel.app`
 
+

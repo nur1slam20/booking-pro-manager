@@ -24,3 +24,4 @@ router.delete('/:id', authMiddleware, deleteBookingController);
 export default router;
 
 
+

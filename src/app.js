@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { errorMiddleware } from './utils/error.js';
 import logger from './utils/logger.js';
+import { specs, swaggerUi } from './config/swagger.js';
 
 // Роутеры (будут созданы ниже)
 import authRouter from './modules/auth/auth.routes.js';
@@ -76,11 +77,18 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Swagger UI документация
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Booking Manager PRO API Documentation',
+}));
+
 // Информация об API
 app.get('/', (req, res) => {
   res.status(200).json({
     message: 'Booking Manager PRO API',
     version: '1.0.0',
+    documentation: '/api-docs',
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
