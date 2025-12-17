@@ -3,6 +3,100 @@ import { Link } from 'react-router-dom';
 import { mastersApi } from '../services/masters';
 import { reviewsApi } from '../services/reviews';
 
+// Компонент для отображения отзывов мастера
+function MasterReviews({ masterId }) {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [rating, setRating] = useState(null);
+
+  useEffect(() => {
+    if (masterId) {
+      loadReviews();
+      loadRating();
+    }
+  }, [masterId]);
+
+  const loadReviews = async () => {
+    try {
+      const response = await reviewsApi.getAll(1, 10, masterId);
+      setReviews(response.data || []);
+    } catch (err) {
+      console.error('Ошибка загрузки отзывов:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadRating = async () => {
+    try {
+      const data = await reviewsApi.getAverageRating(masterId);
+      setRating(data);
+    } catch (err) {
+      console.error('Ошибка загрузки рейтинга:', err);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-sm text-gray-500">Загрузка отзывов...</div>;
+  }
+
+  const moderatedReviews = reviews.filter(r => r.is_moderated === true);
+
+  return (
+    <div className="mb-4">
+      <h4 className="font-bold mb-2">Отзывы:</h4>
+      {rating && rating.total_reviews > 0 ? (
+        <>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center">
+              <span className="text-2xl text-yellow-500">⭐</span>
+              <span className="text-xl font-bold">{Number(rating.average_rating).toFixed(1)}</span>
+            </div>
+            <span className="text-sm text-gray-600">
+              ({rating.total_reviews} {rating.total_reviews === 1 ? 'отзыв' : rating.total_reviews < 5 ? 'отзыва' : 'отзывов'})
+            </span>
+          </div>
+          {moderatedReviews.length > 0 ? (
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {moderatedReviews.slice(0, 3).map((review) => (
+                <div key={review.id} className="bg-gray-50 p-3 rounded text-sm">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span
+                          key={star}
+                          className={star <= review.rating ? 'text-yellow-500 text-xs' : 'text-gray-300 text-xs'}
+                        >
+                          ⭐
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {review.user_name || 'Пользователь'}
+                    </span>
+                  </div>
+                  {review.comment && (
+                    <p className="text-gray-700 text-xs">{review.comment}</p>
+                  )}
+                </div>
+              ))}
+              {moderatedReviews.length > 3 && (
+                <p className="text-xs text-gray-500 text-center">
+                  И еще {moderatedReviews.length - 3} {moderatedReviews.length - 3 === 1 ? 'отзыв' : 'отзывов'}...
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">Пока нет отзывов</p>
+          )}
+        </>
+      ) : (
+        <p className="text-sm text-gray-500">Пока нет отзывов</p>
+      )}
+    </div>
+  );
+}
+
 function Masters() {
   const [masters, setMasters] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -156,9 +250,11 @@ function Masters() {
               </div>
             )}
 
+            <MasterReviews masterId={selectedMaster.id} />
+
             <Link
               to="/bookings"
-              className="block w-full bg-blue-600 text-white text-center px-4 py-2 rounded-lg hover:bg-blue-700"
+              className="block w-full bg-blue-600 text-white text-center px-4 py-2 rounded-lg hover:bg-blue-700 mt-4"
             >
               Записаться к мастеру
             </Link>

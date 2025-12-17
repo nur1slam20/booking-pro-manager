@@ -5,11 +5,15 @@ import { authService } from '../services/auth';
 
 function Reviews() {
   const [completedBookings, setCompletedBookings] = useState([]);
-  const [reviews, setReviews] = useState([]);
+  const [myReviews, setMyReviews] = useState([]);
+  const [allReviews, setAllReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [formData, setFormData] = useState({ rating: 5, comment: '' });
+  const [filter, setFilter] = useState('my'); // 'my' или 'all'
+  const [sortBy, setSortBy] = useState('date'); // 'date' или 'rating'
+  const [ratingFilter, setRatingFilter] = useState(0); // 0 = все, 1-5 = фильтр по рейтингу
   const user = authService.getCurrentUser();
 
   useEffect(() => {
@@ -20,18 +24,26 @@ function Reviews() {
 
   const loadData = async () => {
     try {
-      const [bookingsData, reviewsData] = await Promise.all([
+      const [bookingsData, myReviewsData, allReviewsData] = await Promise.all([
         bookingsApi.getMy(),
-        reviewsApi.getAll(1, 100),
+        reviewsApi.getAll(1, 100), // Мои отзывы (фильтруем на frontend)
+        reviewsApi.getAll(1, 100, null, null), // Все отзывы (только модерированные)
       ]);
 
       // Фильтруем завершенные бронирования, на которые еще нет отзыва
       const completed = bookingsData.filter(b => b.status === 'completed');
-      const reviewedBookingIds = new Set(reviewsData.data.map(r => r.booking_id));
+      const reviewedBookingIds = new Set(myReviewsData.data.map(r => r.booking_id));
       const withoutReview = completed.filter(b => !reviewedBookingIds.has(b.id));
 
       setCompletedBookings(withoutReview);
-      setReviews(reviewsData.data || []);
+      
+      // Фильтруем только мои отзывы
+      const myReviewsFiltered = myReviewsData.data.filter(r => r.user_id === user?.id);
+      setMyReviews(myReviewsFiltered);
+      
+      // Все модерированные отзывы
+      const moderatedReviews = (allReviewsData.data || []).filter(r => r.is_moderated === true);
+      setAllReviews(moderatedReviews);
     } catch (err) {
       console.error('Ошибка загрузки данных:', err);
     } finally {
@@ -66,6 +78,32 @@ function Reviews() {
     return <div className="text-center py-12">Загрузка...</div>;
   }
 
+  // Фильтрация и сортировка отзывов
+  const getFilteredAndSortedReviews = () => {
+    const reviewsToShow = filter === 'my' ? myReviews : allReviews;
+    
+    let filtered = reviewsToShow;
+    
+    // Фильтр по рейтингу
+    if (ratingFilter > 0) {
+      filtered = filtered.filter(r => r.rating === ratingFilter);
+    }
+    
+    // Сортировка
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortBy === 'date') {
+        return new Date(b.created_at) - new Date(a.created_at);
+      } else if (sortBy === 'rating') {
+        return b.rating - a.rating;
+      }
+      return 0;
+    });
+    
+    return sorted;
+  };
+
+  const displayedReviews = getFilteredAndSortedReviews();
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">Отзывы</h2>
@@ -93,11 +131,67 @@ function Reviews() {
         </div>
       )}
 
-      {reviews.length > 0 && (
+      {/* Переключатель и фильтры */}
+      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+        <div className="flex flex-wrap gap-4 items-center mb-4">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilter('my')}
+              className={`px-4 py-2 rounded-lg font-medium ${
+                filter === 'my'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Мои отзывы ({myReviews.length})
+            </button>
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-4 py-2 rounded-lg font-medium ${
+                filter === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Все отзывы ({allReviews.length})
+            </button>
+          </div>
+
+          {filter === 'all' && (
+            <>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-2 border rounded-lg"
+              >
+                <option value="date">Сортировка: по дате</option>
+                <option value="rating">Сортировка: по рейтингу</option>
+              </select>
+
+              <select
+                value={ratingFilter}
+                onChange={(e) => setRatingFilter(Number(e.target.value))}
+                className="px-4 py-2 border rounded-lg"
+              >
+                <option value="0">Все рейтинги</option>
+                <option value="5">⭐ 5 звезд</option>
+                <option value="4">⭐ 4 звезды</option>
+                <option value="3">⭐ 3 звезды</option>
+                <option value="2">⭐ 2 звезды</option>
+                <option value="1">⭐ 1 звезда</option>
+              </select>
+            </>
+          )}
+        </div>
+      </div>
+
+      {displayedReviews.length > 0 && (
         <div>
-          <h3 className="text-xl font-bold mb-4">Мои отзывы</h3>
+          <h3 className="text-xl font-bold mb-4">
+            {filter === 'my' ? 'Мои отзывы' : 'Все отзывы'}
+          </h3>
           <div className="space-y-4">
-            {reviews.map((review) => (
+            {displayedReviews.map((review) => (
               <div key={review.id} className="bg-white p-4 rounded-lg shadow-md">
                 <div className="flex items-start justify-between">
                   <div>
@@ -116,15 +210,50 @@ function Reviews() {
                         {new Date(review.created_at).toLocaleDateString('ru-RU')}
                       </span>
                     </div>
-                    {review.service_title && (
-                      <p className="font-semibold mb-1">{review.service_title}</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      {review.service_title && (
+                        <p className="font-semibold">{review.service_title}</p>
+                      )}
+                      {review.master_name && (
+                        <span className="text-sm text-gray-500">• Мастер: {review.master_name}</span>
+                      )}
+                    </div>
+                    {review.comment && (
+                      <p className="text-gray-700 mb-2">{review.comment}</p>
                     )}
-                    {review.master_name && (
-                      <p className="text-sm text-gray-600 mb-1">Мастер: {review.master_name}</p>
-                    )}
-                    {review.comment && <p className="text-gray-700">{review.comment}</p>}
-                    {review.is_moderated === false && (
+                    {review.is_moderated === false && filter === 'my' && (
                       <p className="text-sm text-yellow-600 mt-2">⏳ Ожидает модерации</p>
+                    )}
+                    {filter === 'my' && (
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          onClick={async () => {
+                            if (confirm('Редактировать отзыв?')) {
+                              // Можно добавить редактирование
+                              alert('Функция редактирования в разработке');
+                            }
+                          }}
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          Редактировать
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (confirm('Удалить отзыв?')) {
+                              try {
+                                await reviewsApi.delete(review.id);
+                                loadData();
+                                alert('Отзыв удален');
+                              } catch (err) {
+                                alert('Ошибка удаления отзыва');
+                              }
+                            }
+                          }}
+                          className="text-sm text-red-600 hover:underline"
+                        >
+                          Удалить
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -134,8 +263,19 @@ function Reviews() {
         </div>
       )}
 
-      {completedBookings.length === 0 && reviews.length === 0 && (
-        <p className="text-gray-600">У вас пока нет завершенных бронирований для отзыва</p>
+      {completedBookings.length === 0 && displayedReviews.length === 0 && (
+        <div className="text-center py-12 bg-white rounded-lg shadow-md">
+          <p className="text-gray-600 text-lg mb-2">
+            {filter === 'my' 
+              ? 'У вас пока нет отзывов' 
+              : 'Пока нет отзывов в системе'}
+          </p>
+          {filter === 'my' && completedBookings.length === 0 && (
+            <p className="text-sm text-gray-500">
+              Завершите бронирование, чтобы оставить отзыв
+            </p>
+          )}
+        </div>
       )}
 
       {showReviewForm && selectedBooking && (
