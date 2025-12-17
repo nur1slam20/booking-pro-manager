@@ -1,8 +1,12 @@
 import api from './api.js';
 
 export const servicesApi = {
-  async getAll(page = 1, limit = 100) {
-    const response = await api.get(`/services?page=${page}&limit=${limit}`);
+  async getAll(page = 1, limit = 100, categoryId = null) {
+    let url = `/services?page=${page}&limit=${limit}`;
+    if (categoryId) {
+      url += `&categoryId=${categoryId}`;
+    }
+    const response = await api.get(url);
     return response.data;
   },
 

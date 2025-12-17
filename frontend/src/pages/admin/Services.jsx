@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { servicesApi } from '../../services/services';
+import { categoriesApi } from '../../services/categories';
 
 function AdminServices() {
   const [services, setServices] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingService, setEditingService] = useState(null);
@@ -11,11 +13,22 @@ function AdminServices() {
     description: '',
     price: '',
     duration: '',
+    categoryId: '',
   });
 
   useEffect(() => {
+    loadCategories();
     loadServices();
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      const data = await categoriesApi.getAll();
+      setCategories(data);
+    } catch (err) {
+      console.error('Ошибка загрузки категорий:', err);
+    }
+  };
 
   const loadServices = async () => {
     try {
@@ -39,6 +52,7 @@ function AdminServices() {
           description: formData.description,
           price: parseInt(formData.price),
           duration: parseInt(formData.duration),
+          categoryId: formData.categoryId ? parseInt(formData.categoryId) : null,
         });
       } else {
         await servicesApi.create({
@@ -46,11 +60,12 @@ function AdminServices() {
           description: formData.description,
           price: parseInt(formData.price),
           duration: parseInt(formData.duration),
+          categoryId: formData.categoryId ? parseInt(formData.categoryId) : null,
         });
       }
       setShowForm(false);
       setEditingService(null);
-      setFormData({ title: '', description: '', price: '', duration: '' });
+      setFormData({ title: '', description: '', price: '', duration: '', categoryId: '' });
       loadServices();
     } catch (err) {
       alert(err.response?.data?.message || 'Ошибка сохранения услуги');
@@ -64,6 +79,7 @@ function AdminServices() {
       description: service.description || '',
       price: service.price.toString(),
       duration: service.duration.toString(),
+      categoryId: service.category_id ? service.category_id.toString() : '',
     });
     setShowForm(true);
   };
@@ -146,6 +162,21 @@ function AdminServices() {
                   className="w-full px-4 py-2 border rounded-lg"
                 />
               </div>
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Категория</label>
+              <select
+                value={formData.categoryId}
+                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                className="w-full px-4 py-2 border rounded-lg"
+              >
+                <option value="">Без категории</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.icon} {category.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
               {editingService ? 'Сохранить' : 'Создать'}

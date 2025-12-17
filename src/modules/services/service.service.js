@@ -16,16 +16,18 @@ const serviceSchema = Joi.object({
   price: Joi.number().integer().min(0).required(),
   duration: Joi.number().integer().min(1).required(),
   isActive: Joi.boolean().optional(),
+  categoryId: Joi.number().integer().allow(null).optional(),
 });
 
 export async function listServices(query) {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const activeOnly = query.activeOnly !== 'false'; // По умолчанию только активные
+  const categoryId = query.categoryId ? Number(query.categoryId) : null;
 
   const [items, total] = await Promise.all([
-    getServices({ page, limit, activeOnly }),
-    countServices(activeOnly),
+    getServices({ page, limit, activeOnly, categoryId }),
+    countServices(activeOnly, categoryId),
   ]);
 
   return {
@@ -54,6 +56,7 @@ export async function createServiceService(data) {
   return createService({
     ...value,
     isActive: value.isActive !== undefined ? value.isActive : true,
+    categoryId: value.categoryId || null,
   });
 }
 
@@ -65,6 +68,7 @@ export async function updateServiceService(id, data) {
     price: Joi.number().integer().min(0).optional(),
     duration: Joi.number().integer().min(1).optional(),
     isActive: Joi.boolean().optional(),
+    categoryId: Joi.number().integer().allow(null).optional(),
   });
 
   const { error, value } = updateSchema.validate(data);

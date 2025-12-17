@@ -1,19 +1,27 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { servicesApi } from '../services/services';
+import { categoriesApi } from '../services/categories';
 import { bookingsApi } from '../services/bookings';
 import { authService } from '../services/auth';
 
 function Home() {
   const [services, setServices] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const user = authService.getCurrentUser();
 
   useEffect(() => {
+    loadCategories();
     loadServices();
   }, []);
+
+  useEffect(() => {
+    loadServices();
+  }, [selectedCategory]);
 
   useEffect(() => {
     if (user) {
@@ -21,10 +29,19 @@ function Home() {
     }
   }, [user?.id]); // Зависимость только от user.id, чтобы не перезагружать при каждом рендере
 
+  const loadCategories = async () => {
+    try {
+      const data = await categoriesApi.getAll();
+      setCategories(data);
+    } catch (err) {
+      console.error('Ошибка загрузки категорий:', err);
+    }
+  };
+
   const loadServices = async () => {
     try {
       setLoading(true);
-      const response = await servicesApi.getAll();
+      const response = await servicesApi.getAll(1, 100, selectedCategory);
       // Фильтруем только активные услуги
       const activeServices = (response.data || []).filter(s => s.is_active !== false);
       setServices(activeServices);
@@ -84,7 +101,39 @@ function Home() {
         </div>
       )}
 
-      <h1 className="text-3xl font-bold mb-6">Наши услуги</h1>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-4">Наши услуги</h1>
+        
+        {/* Фильтр по категориям */}
+        {categories.length > 0 && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                selectedCategory === null
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Все категории
+            </button>
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                  selectedCategory === category.id
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {category.icon && <span>{category.icon}</span>}
+                <span>{category.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       {services.length === 0 ? (
         <p className="text-gray-600">Услуги пока не добавлены</p>
       ) : (
@@ -94,6 +143,12 @@ function Home() {
               {service.is_active === false && (
                 <div className="mb-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded inline-block">
                   Недоступна
+                </div>
+              )}
+              {service.category_name && (
+                <div className="mb-2 flex items-center gap-2 text-sm text-gray-600">
+                  {service.category_icon && <span>{service.category_icon}</span>}
+                  <span>{service.category_name}</span>
                 </div>
               )}
               <h2 className="text-xl font-bold mb-2">{service.title}</h2>

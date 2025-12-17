@@ -12,6 +12,7 @@ import authRouter from './modules/auth/auth.routes.js';
 import userRouter from './modules/users/user.routes.js';
 import serviceRouter from './modules/services/service.routes.js';
 import bookingRouter from './modules/bookings/booking.routes.js';
+import categoryRouter from './modules/categories/category.routes.js';
 
 dotenv.config();
 
@@ -101,6 +102,7 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
+      categories: '/api/categories',
       services: '/api/services',
       bookings: '/api/bookings',
     },
@@ -110,6 +112,7 @@ app.get('/', (req, res) => {
 // Основные роуты
 app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
+app.use('/api/categories', categoryRouter);
 app.use('/api/services', serviceRouter);
 app.use('/api/bookings', bookingRouter);
 
