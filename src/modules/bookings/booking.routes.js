@@ -48,66 +48,16 @@ const router = Router();
  *         description: Список всех бронирований
  */
 router.post('/', authMiddleware, createBookingController);
-router.get('/', authMiddleware, roleMiddleware('admin'), getAllBookingsController);
-
-/**
- * @swagger
- * /api/bookings/my:
- *   get:
- *     summary: Получить мои бронирования (user)
- *     tags: [Bookings]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Список бронирований текущего пользователя
- */
 router.get('/my', authMiddleware, getMyBookingsController);
+router.get('/my/stats', authMiddleware, getMyBookingStatsController);
+router.get('/:id', authMiddleware, getBookingDetailsController);
 
-/**
- * @swagger
- * /api/bookings/{id}:
- *   put:
- *     summary: Обновить статус бронирования (admin only)
- *     tags: [Bookings]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [status]
- *             properties:
- *               status:
- *                 type: string
- *                 enum: [pending, confirmed, rejected, cancelled]
- *     responses:
- *       200:
- *         description: Статус обновлен
- *   delete:
- *     summary: Удалить бронирование
- *     tags: [Bookings]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       204:
- *         description: Бронирование удалено
- */
-router.put('/:id', authMiddleware, roleMiddleware('admin'), updateBookingStatusController);
+// Админ
+router.get('/admin/stats', authMiddleware, roleMiddleware('admin'), getAdminStatsController);
+router.get('/', authMiddleware, roleMiddleware('admin'), getAllBookingsController);
+router.put('/:id/status', authMiddleware, roleMiddleware('admin'), updateBookingStatusController);
+
+// Удаление/отмена: пользователь может отменить своё, админ — удалить любое
 router.delete('/:id', authMiddleware, deleteBookingController);
 
 export default router;

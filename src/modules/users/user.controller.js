@@ -1,4 +1,4 @@
-import { getAllUsers, getUser, removeUser } from './user.service.js';
+import { getAllUsers, getUser, updateUserProfile, removeUser } from './user.service.js';
 
 export async function getUsersController(req, res, next) {
   try {
@@ -12,6 +12,15 @@ export async function getUsersController(req, res, next) {
 export async function getUserController(req, res, next) {
   try {
     const user = await getUser(Number(req.params.id));
+    res.json(user);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateProfileController(req, res, next) {
+  try {
+    const user = await updateUserProfile(req.user.id, req.body);
     res.json(user);
   } catch (err) {
     next(err);

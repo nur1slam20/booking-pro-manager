@@ -6,6 +6,7 @@ import {
   getServiceById,
   createService,
   updateService,
+  toggleServiceActive,
   deleteService,
 } from './service.repository.js';
 
@@ -14,15 +15,17 @@ const serviceSchema = Joi.object({
   description: Joi.string().allow('', null),
   price: Joi.number().integer().min(0).required(),
   duration: Joi.number().integer().min(1).required(),
+  isActive: Joi.boolean().optional(),
 });
 
 export async function listServices(query) {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
+  const activeOnly = query.activeOnly !== 'false'; // По умолчанию только активные
 
   const [items, total] = await Promise.all([
-    getServices({ page, limit }),
-    countServices(),
+    getServices({ page, limit, activeOnly }),
+    countServices(activeOnly),
   ]);
 
   return {
@@ -48,16 +51,36 @@ export async function createServiceService(data) {
   if (error) {
     throw badRequest(error.details[0].message);
   }
-  return createService(value);
+  return createService({
+    ...value,
+    isActive: value.isActive !== undefined ? value.isActive : true,
+  });
 }
 
 export async function updateServiceService(id, data) {
-  const { error, value } = serviceSchema.validate(data);
+  // Для обновления не все поля обязательны
+  const updateSchema = Joi.object({
+    title: Joi.string().min(2).max(200).optional(),
+    description: Joi.string().allow('', null).optional(),
+    price: Joi.number().integer().min(0).optional(),
+    duration: Joi.number().integer().min(1).optional(),
+    isActive: Joi.boolean().optional(),
+  });
+
+  const { error, value } = updateSchema.validate(data);
   if (error) {
     throw badRequest(error.details[0].message);
   }
 
   const updated = await updateService(id, value);
+  if (!updated) {
+    throw notFound('Услуга не найдена');
+  }
+  return updated;
+}
+
+export async function toggleServiceActiveService(id) {
+  const updated = await toggleServiceActive(id);
   if (!updated) {
     throw notFound('Услуга не найдена');
   }

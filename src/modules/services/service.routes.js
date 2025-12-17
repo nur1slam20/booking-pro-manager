@@ -4,6 +4,7 @@ import {
   getServiceController,
   createServiceController,
   updateServiceController,
+  toggleServiceActiveController,
   deleteServiceController,
 } from './service.controller.js';
 import { authMiddleware, roleMiddleware } from '../../middleware/auth.js';
@@ -113,6 +114,7 @@ router.post('/', authMiddleware, roleMiddleware('admin'), createServiceControlle
  */
 router.get('/:id', getServiceController);
 router.put('/:id', authMiddleware, roleMiddleware('admin'), updateServiceController);
+router.patch('/:id/toggle-active', authMiddleware, roleMiddleware('admin'), toggleServiceActiveController);
 router.delete('/:id', authMiddleware, roleMiddleware('admin'), deleteServiceController);
 
 export default router;

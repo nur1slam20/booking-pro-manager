@@ -3,6 +3,7 @@ import {
   getService,
   createServiceService,
   updateServiceService,
+  toggleServiceActiveService,
   deleteServiceService,
 } from './service.service.js';
 
@@ -36,6 +37,15 @@ export async function createServiceController(req, res, next) {
 export async function updateServiceController(req, res, next) {
   try {
     const service = await updateServiceService(Number(req.params.id), req.body);
+    res.json(service);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function toggleServiceActiveController(req, res, next) {
+  try {
+    const service = await toggleServiceActiveService(Number(req.params.id));
     res.json(service);
   } catch (err) {
     next(err);

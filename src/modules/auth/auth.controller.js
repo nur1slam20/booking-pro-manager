@@ -22,7 +22,7 @@ export async function loginController(req, res, next) {
 export async function profileController(req, res, next) {
   try {
     const result = await pool.query(
-      'SELECT id, name, email, role, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, phone, role, created_at, updated_at FROM users WHERE id = $1',
       [req.user.id],
     );
 

@@ -1,10 +1,13 @@
 import { Router } from 'express';
-import { getUsersController, getUserController, deleteUserController } from './user.controller.js';
+import { getUsersController, getUserController, updateProfileController, deleteUserController } from './user.controller.js';
 import { authMiddleware, roleMiddleware } from '../../middleware/auth.js';
 
 const router = Router();
 
-// Все роуты только для admin
+// Профиль пользователя (доступен всем авторизованным)
+router.put('/profile', authMiddleware, updateProfileController);
+
+// Все остальные роуты только для admin
 router.use(authMiddleware, roleMiddleware('admin'));
 
 /**
