@@ -93,29 +93,12 @@ function Home() {
     <div>
       {/* Призыв к регистрации/входу для неавторизованных пользователей */}
       {!user && (
-        <div className="mb-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-lg shadow-lg">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold mb-2">Добро пожаловать в Booking Pro!</h2>
-              <p className="text-blue-100">
-                Зарегистрируйтесь или войдите, чтобы забронировать услуги и отслеживать свои бронирования
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Link
-                to="/register"
-                className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
-              >
-                Регистрация
-              </Link>
-              <Link
-                to="/login"
-                className="bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-900 transition-colors border-2 border-white"
-              >
-                Войти
-              </Link>
-            </div>
-          </div>
+        <div className="mb-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-lg shadow-lg text-center">
+          <h2 className="text-2xl font-bold mb-2">Добро пожаловать в Booking Pro!</h2>
+          <p className="text-blue-100 mb-4">
+            Зарегистрируйтесь или войдите, чтобы просматривать услуги и бронировать их
+          </p>
+          <p className="text-sm opacity-90">Используйте кнопки в правом верхнем углу для входа или регистрации</p>
         </div>
       )}
 
@@ -176,83 +159,122 @@ function Home() {
         </div>
       )}
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-4">Наши услуги</h1>
-        
-        {/* Фильтр по категориям */}
-        {categories.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                selectedCategory === null
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Все категории
-            </button>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                  selectedCategory === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+      {user ? (
+        <>
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-3xl font-bold">Наши услуги</h1>
+              <Link
+                to="/masters"
+                className="text-blue-600 hover:text-blue-800 font-medium"
               >
-                {category.icon && <span>{category.icon}</span>}
-                <span>{category.name}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-      {services.length === 0 ? (
-        <p className="text-gray-600">Услуги пока не добавлены</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((service) => (
-            <div key={service.id} className="bg-white p-6 rounded-lg shadow-md">
-              {service.is_active === false && (
-                <div className="mb-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded inline-block">
-                  Недоступна
-                </div>
-              )}
-              {service.category_name && (
-                <div className="mb-2 flex items-center gap-2 text-sm text-gray-600">
-                  {service.category_icon && <span>{service.category_icon}</span>}
-                  <span>{service.category_name}</span>
-                </div>
-              )}
-              <h2 className="text-xl font-bold mb-2">{service.title}</h2>
-              <p className="text-gray-600 mb-4">{service.description || 'Описание отсутствует'}</p>
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-2xl font-bold text-blue-600">{service.price} ₸</p>
-                  <p className="text-sm text-gray-500">Длительность: {service.duration} мин</p>
-                </div>
-                {user ? (
-                  <Link
-                    to="/bookings"
-                    state={{ serviceId: service.id }}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-                    style={{ pointerEvents: service.is_active === false ? 'none' : 'auto' }}
-                  >
-                    {service.is_active === false ? 'Недоступна' : 'Забронировать'}
-                  </Link>
-                ) : (
-                  <Link
-                    to="/login"
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                  >
-                    Войти для бронирования
-                  </Link>
-                )}
-              </div>
+                👥 Мастера →
+              </Link>
             </div>
-          ))}
+            
+            {/* Фильтр по категориям */}
+            {categories.length > 0 && (
+              <div className="mb-6 flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    selectedCategory === null
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Все категории
+                </button>
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                      selectedCategory === category.id
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {category.icon && <span>{category.icon}</span>}
+                    <span>{category.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {services.length === 0 ? (
+            <p className="text-gray-600">Услуги пока не добавлены</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services.map((service) => (
+                <div key={service.id} className="bg-white p-6 rounded-lg shadow-md">
+                  {service.is_active === false && (
+                    <div className="mb-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded inline-block">
+                      Недоступна
+                    </div>
+                  )}
+                  {service.category_name && (
+                    <div className="mb-2 flex items-center gap-2 text-sm text-gray-600">
+                      {service.category_icon && <span>{service.category_icon}</span>}
+                      <span>{service.category_name}</span>
+                    </div>
+                  )}
+                  <h2 className="text-xl font-bold mb-2">{service.title}</h2>
+                  <p className="text-gray-600 mb-4">{service.description || 'Описание отсутствует'}</p>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-2xl font-bold text-blue-600">{service.price} ₸</p>
+                      <p className="text-sm text-gray-500">Длительность: {service.duration} мин</p>
+                    </div>
+                    <Link
+                      to="/bookings"
+                      state={{ serviceId: service.id }}
+                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                      style={{ pointerEvents: service.is_active === false ? 'none' : 'auto' }}
+                    >
+                      {service.is_active === false ? 'Недоступна' : 'Забронировать'}
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-8 text-center">
+            <Link
+              to="/masters"
+              className="inline-block bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition-colors"
+            >
+              👥 Посмотреть всех мастеров
+            </Link>
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-12">
+          <h1 className="text-3xl font-bold mb-4">Наши услуги</h1>
+          <div className="bg-white p-8 rounded-lg shadow-md max-w-md mx-auto">
+            <p className="text-gray-600 text-lg mb-6">
+              Для просмотра услуг необходимо авторизоваться
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              Используйте кнопки "Войти" или "Регистрация" в правом верхнем углу страницы
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Link
+                to="/login"
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Войти
+              </Link>
+              <Link
+                to="/register"
+                className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+              >
+                Регистрация
+              </Link>
+            </div>
+          </div>
         </div>
       )}
 
