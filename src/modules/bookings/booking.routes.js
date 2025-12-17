@@ -2,9 +2,12 @@ import { Router } from 'express';
 import {
   createBookingController,
   getMyBookingsController,
+  getMyBookingStatsController,
   getAllBookingsController,
+  getBookingDetailsController,
   updateBookingStatusController,
   deleteBookingController,
+  getAdminStatsController,
 } from './booking.controller.js';
 import { authMiddleware, roleMiddleware } from '../../middleware/auth.js';
 
