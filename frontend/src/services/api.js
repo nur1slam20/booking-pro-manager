@@ -18,5 +18,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Обработка ошибок 429 (Too Many Requests)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 429) {
+      // Не логируем 429 ошибки в консоль, чтобы не засорять
+      console.warn('Rate limit exceeded. Please wait a moment.');
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
 

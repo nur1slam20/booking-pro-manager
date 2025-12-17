@@ -11,6 +11,9 @@ function Dashboard() {
 
   useEffect(() => {
     loadStats();
+    // Обновляем статистику каждые 30 секунд
+    const interval = setInterval(loadStats, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadStats = async () => {
@@ -18,7 +21,10 @@ function Dashboard() {
       const data = await bookingsApi.getAdminStats();
       setStats(data);
     } catch (err) {
-      console.error('Ошибка загрузки статистики:', err);
+      // Не логируем 429 ошибки
+      if (err.response?.status !== 429) {
+        console.error('Ошибка загрузки статистики:', err);
+      }
     } finally {
       setLoading(false);
     }

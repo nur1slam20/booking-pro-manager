@@ -13,10 +13,13 @@ function Home() {
 
   useEffect(() => {
     loadServices();
+  }, []);
+
+  useEffect(() => {
     if (user) {
       loadStats();
     }
-  }, [user]);
+  }, [user?.id]); // Зависимость только от user.id, чтобы не перезагружать при каждом рендере
 
   const loadServices = async () => {
     try {
@@ -35,11 +38,15 @@ function Home() {
   };
 
   const loadStats = async () => {
+    if (!user) return; // Не загружаем если нет пользователя
     try {
       const statsData = await bookingsApi.getMyStats();
       setStats(statsData);
     } catch (err) {
-      console.error('Ошибка загрузки статистики:', err);
+      // Не логируем ошибки статистики, чтобы не засорять консоль
+      if (err.response?.status !== 429) {
+        console.error('Ошибка загрузки статистики:', err);
+      }
     }
   };
 
