@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { servicesApi } from '../services/services';
 import { categoriesApi } from '../services/categories';
 import { bookingsApi } from '../services/bookings';
+import { aiApi } from '../services/ai';
 import { authService } from '../services/auth';
 
 function Home() {
@@ -10,6 +11,7 @@ function Home() {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [stats, setStats] = useState(null);
+  const [aiRecommendations, setAiRecommendations] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const user = authService.getCurrentUser();
@@ -26,6 +28,7 @@ function Home() {
   useEffect(() => {
     if (user) {
       loadStats();
+      loadAiRecommendations();
     }
   }, [user?.id]); // Зависимость только от user.id, чтобы не перезагружать при каждом рендере
 
@@ -64,6 +67,17 @@ function Home() {
       if (err.response?.status !== 429) {
         console.error('Ошибка загрузки статистики:', err);
       }
+    }
+  };
+
+  const loadAiRecommendations = async () => {
+    if (!user) return;
+    try {
+      const recommendations = await aiApi.getRecommendations();
+      setAiRecommendations(recommendations);
+    } catch (err) {
+      // Тихая ошибка - AI рекомендации не критичны
+      console.error('Ошибка загрузки AI рекомендаций:', err);
     }
   };
 
@@ -106,26 +120,59 @@ function Home() {
       )}
 
       {user && stats && (
-        <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-4">Моя статистика</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600">{stats.total || 0}</p>
-              <p className="text-sm text-gray-600">Всего бронирований</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-green-600">{stats.active || 0}</p>
-              <p className="text-sm text-gray-600">Активных</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-yellow-600">{stats.pending || 0}</p>
-              <p className="text-sm text-gray-600">Ожидают подтверждения</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-purple-600">{stats.completed || 0}</p>
-              <p className="text-sm text-gray-600">Завершенных</p>
+        <div className="mb-8 space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold mb-4">Моя статистика</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-blue-600">{stats.total || 0}</p>
+                <p className="text-sm text-gray-600">Всего бронирований</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-green-600">{stats.active || 0}</p>
+                <p className="text-sm text-gray-600">Активных</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-yellow-600">{stats.pending || 0}</p>
+                <p className="text-sm text-gray-600">Ожидают подтверждения</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-purple-600">{stats.completed || 0}</p>
+                <p className="text-sm text-gray-600">Завершенных</p>
+              </div>
             </div>
           </div>
+
+          {aiRecommendations && (
+            <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-bold mb-4">🤖 AI Рекомендации</h2>
+              <div className="grid md:grid-cols-3 gap-4">
+                {aiRecommendations.service && (
+                  <div className="bg-white/10 p-4 rounded-lg">
+                    <p className="text-sm opacity-90 mb-1">Рекомендуемая услуга</p>
+                    <p className="text-lg font-semibold">{aiRecommendations.service.title}</p>
+                    <p className="text-sm opacity-75">{aiRecommendations.service.price} ₸</p>
+                  </div>
+                )}
+                {aiRecommendations.master && (
+                  <div className="bg-white/10 p-4 rounded-lg">
+                    <p className="text-sm opacity-90 mb-1">Рекомендуемый мастер</p>
+                    <p className="text-lg font-semibold">{aiRecommendations.master.name}</p>
+                    {aiRecommendations.master.rating > 0 && (
+                      <p className="text-sm opacity-75">⭐ {aiRecommendations.master.rating.toFixed(1)}</p>
+                    )}
+                  </div>
+                )}
+                {aiRecommendations.time && (
+                  <div className="bg-white/10 p-4 rounded-lg">
+                    <p className="text-sm opacity-90 mb-1">Рекомендуемое время</p>
+                    <p className="text-lg font-semibold">{aiRecommendations.time}</p>
+                  </div>
+                )}
+              </div>
+              <p className="text-sm mt-4 opacity-90">{aiRecommendations.reason}</p>
+            </div>
+          )}
         </div>
       )}
 

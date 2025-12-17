@@ -76,6 +76,7 @@ function AdminBookings() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">ID</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Пользователь</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Услуга</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Мастер</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Дата</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Время</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Статус</th>
@@ -89,6 +90,7 @@ function AdminBookings() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{booking.id}</td>
                 <td className="px-6 py-4 text-sm text-gray-900">{booking.user_name || 'N/A'}</td>
                 <td className="px-6 py-4 text-sm text-gray-900">{booking.service_title || 'N/A'}</td>
+                <td className="px-6 py-4 text-sm text-gray-900">{booking.master_name || 'Не указан'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{booking.date}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{booking.time}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">

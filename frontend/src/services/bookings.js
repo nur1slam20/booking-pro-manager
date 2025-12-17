@@ -6,6 +6,7 @@ export const bookingsApi = {
       serviceId: bookingData.serviceId,
       date: bookingData.date,
       time: bookingData.time,
+      masterId: bookingData.masterId || null,
     });
     return response.data;
   },

@@ -2,16 +2,20 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { bookingsApi } from '../services/bookings';
 import { servicesApi } from '../services/services';
+import { mastersApi } from '../services/masters';
 
 function Bookings() {
   const [bookings, setBookings] = useState([]);
   const [services, setServices] = useState([]);
+  const [masters, setMasters] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
   const serviceIdFromState = location.state?.serviceId;
 
   const [formData, setFormData] = useState({
     serviceId: serviceIdFromState || '',
+    masterId: '',
     date: '',
     time: '',
   });
@@ -22,6 +26,14 @@ function Bookings() {
     loadBookings();
     loadServices();
   }, []);
+
+  useEffect(() => {
+    if (formData.serviceId && formData.masterId && formData.date) {
+      loadTimeSlots();
+    } else {
+      setAvailableSlots([]);
+    }
+  }, [formData.serviceId, formData.masterId, formData.date]);
 
   const loadBookings = async () => {
     try {
@@ -45,6 +57,43 @@ function Bookings() {
     }
   };
 
+  const loadMasters = async (serviceId) => {
+    try {
+      if (!serviceId) {
+        setMasters([]);
+        return;
+      }
+      const response = await mastersApi.getAll(1, 100, serviceId);
+      setMasters(response.data || []);
+    } catch (err) {
+      console.error('Ошибка загрузки мастеров:', err);
+      setMasters([]);
+    }
+  };
+
+  const loadTimeSlots = async () => {
+    try {
+      if (!formData.masterId || !formData.date || !formData.serviceId) {
+        setAvailableSlots([]);
+        return;
+      }
+
+      const service = services.find(s => s.id === Number(formData.serviceId));
+      const duration = service?.duration || 60;
+
+      const response = await mastersApi.getTimeSlots(formData.masterId, formData.date, duration);
+      setAvailableSlots(response.slots || []);
+    } catch (err) {
+      console.error('Ошибка загрузки временных слотов:', err);
+      setAvailableSlots([]);
+    }
+  };
+
+  const handleServiceChange = (serviceId) => {
+    setFormData({ ...formData, serviceId, masterId: '', date: '', time: '' });
+    loadMasters(serviceId);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -52,7 +101,9 @@ function Bookings() {
 
     try {
       await bookingsApi.create(formData);
-      setFormData({ serviceId: '', date: '', time: '' });
+      setFormData({ serviceId: '', masterId: '', date: '', time: '' });
+      setMasters([]);
+      setAvailableSlots([]);
       loadBookings();
       alert('Бронирование создано успешно!');
     } catch (err) {
@@ -89,7 +140,7 @@ function Bookings() {
             <label className="block text-gray-700 mb-2">Услуга</label>
             <select
               value={formData.serviceId}
-              onChange={(e) => setFormData({ ...formData, serviceId: e.target.value })}
+              onChange={(e) => handleServiceChange(e.target.value)}
               required
               className="w-full px-4 py-2 border rounded-lg"
             >
@@ -101,27 +152,79 @@ function Bookings() {
               ))}
             </select>
           </div>
+
+          {formData.serviceId && masters.length > 0 && (
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Мастер (опционально)</label>
+              <select
+                value={formData.masterId}
+                onChange={(e) => setFormData({ ...formData, masterId: e.target.value, date: '', time: '' })}
+                className="w-full px-4 py-2 border rounded-lg"
+              >
+                <option value="">Любой доступный мастер</option>
+                {masters.map((master) => (
+                  <option key={master.id} value={master.id}>
+                    {master.name} {master.rating > 0 && `⭐ ${master.rating.toFixed(1)}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="mb-4">
             <label className="block text-gray-700 mb-2">Дата</label>
             <input
               type="date"
               value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value, time: '' })}
               required
               min={new Date().toISOString().split('T')[0]}
               className="w-full px-4 py-2 border rounded-lg"
             />
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Время</label>
-            <input
-              type="time"
-              value={formData.time}
-              onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-              required
-              className="w-full px-4 py-2 border rounded-lg"
-            />
-          </div>
+
+          {formData.masterId && formData.date && availableSlots.length > 0 ? (
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Время (доступные слоты)</label>
+              <div className="grid grid-cols-4 gap-2 mb-2">
+                {availableSlots.map((slot) => (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, time: slot })}
+                    className={`px-3 py-2 border rounded-lg text-sm ${
+                      formData.time === slot
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white hover:bg-gray-50'
+                    }`}
+                  >
+                    {slot}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="time"
+                value={formData.time}
+                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                required
+                className="w-full px-4 py-2 border rounded-lg"
+              />
+            </div>
+          ) : (
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Время</label>
+              <input
+                type="time"
+                value={formData.time}
+                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                required
+                className="w-full px-4 py-2 border rounded-lg"
+              />
+              {formData.masterId && formData.date && availableSlots.length === 0 && (
+                <p className="text-sm text-gray-500 mt-1">Нет доступных слотов на эту дату</p>
+              )}
+            </div>
+          )}
           <button
             type="submit"
             disabled={submitting}
@@ -143,6 +246,9 @@ function Bookings() {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="font-bold text-lg">{booking.service_title || 'Услуга'}</p>
+                    {booking.master_name && (
+                      <p className="text-gray-600">Мастер: {booking.master_name}</p>
+                    )}
                     <p className="text-gray-600">Дата: {booking.date}</p>
                     <p className="text-gray-600">Время: {booking.time}</p>
                     <p className="mt-2">
