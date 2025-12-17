@@ -283,15 +283,6 @@ function Home() {
               ))}
             </div>
           )}
-
-          <div className="mt-8 text-center">
-            <Link
-              to="/masters"
-              className="inline-block bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition-colors"
-            >
-              👥 Посмотреть всех мастеров
-            </Link>
-          </div>
         </>
       ) : (
         <div className="text-center py-12">
