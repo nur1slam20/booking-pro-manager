@@ -19,13 +19,36 @@ const app = express();
 // Безопасность
 app.use(helmet());
 
-// CORS (по умолчанию разрешаем localhost фронт)
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true,
-  }),
-);
+// CORS
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      'http://localhost:5173',
+      /^https:\/\/.*\.vercel\.app$/, // Разрешаем все Vercel preview URLs
+    ].filter(Boolean);
+
+    // Разрешаем запросы без origin (например, из Postman)
+    if (!origin) return callback(null, true);
+
+    // Проверяем, соответствует ли origin одному из разрешённых
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return origin === allowed;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 
 // Rate limit
 const apiLimiter = rateLimit({
