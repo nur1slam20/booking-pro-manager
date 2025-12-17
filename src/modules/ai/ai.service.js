@@ -18,8 +18,10 @@ export async function getRecommendationsService(userId) {
       getAllMasters({ page: 1, limit: 5, activeOnly: true }),
     ]);
     
-    const services = servicesData || [];
-    const masters = mastersData || [];
+    // getServices возвращает массив напрямую
+    const services = Array.isArray(servicesData) ? servicesData : [];
+    // getAllMasters возвращает массив напрямую
+    const masters = Array.isArray(mastersData) ? mastersData : [];
 
     // Рекомендуем услугу с лучшим рейтингом или первую доступную
     const recommendedService = services[0] || null;
