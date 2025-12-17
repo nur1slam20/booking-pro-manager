@@ -1,5 +1,5 @@
 import { getUserBookings } from '../bookings/booking.repository.js';
-import { getAllServices } from '../services/service.repository.js';
+import { getServices } from '../services/service.repository.js';
 import { getAllMasters } from '../masters/master.repository.js';
 import { getAverageRating } from '../reviews/review.repository.js';
 
@@ -13,16 +13,19 @@ export async function getRecommendationsService(userId) {
 
   // Если нет истории, возвращаем популярные услуги и мастеров
   if (userBookings.length === 0) {
-    const [services, masters] = await Promise.all([
-      getAllServices({ page: 1, limit: 10, activeOnly: true }),
+    const [servicesData, mastersData] = await Promise.all([
+      getServices({ page: 1, limit: 10, activeOnly: true }),
       getAllMasters({ page: 1, limit: 5, activeOnly: true }),
     ]);
+    
+    const services = servicesData || [];
+    const masters = mastersData || [];
 
     // Рекомендуем услугу с лучшим рейтингом или первую доступную
-    const recommendedService = services.data[0] || null;
+    const recommendedService = services[0] || null;
 
     // Рекомендуем мастера с лучшим рейтингом
-    const recommendedMaster = masters.data.sort((a, b) => (b.rating || 0) - (a.rating || 0))[0] || null;
+    const recommendedMaster = masters.sort((a, b) => (b.rating || 0) - (a.rating || 0))[0] || null;
 
     return {
       service: recommendedService,
