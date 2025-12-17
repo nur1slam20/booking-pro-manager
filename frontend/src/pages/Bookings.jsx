@@ -37,7 +37,9 @@ function Bookings() {
   const loadServices = async () => {
     try {
       const response = await servicesApi.getAll();
-      setServices(response.data || []);
+      // Показываем только активные услуги
+      const activeServices = (response.data || []).filter(s => s.is_active !== false);
+      setServices(activeServices);
     } catch (err) {
       console.error('Ошибка загрузки услуг:', err);
     }
@@ -150,6 +152,10 @@ function Bookings() {
                             ? 'bg-green-100 text-green-800'
                             : booking.status === 'rejected'
                             ? 'bg-red-100 text-red-800'
+                            : booking.status === 'completed'
+                            ? 'bg-purple-100 text-purple-800'
+                            : booking.status === 'cancelled'
+                            ? 'bg-gray-100 text-gray-800'
                             : 'bg-yellow-100 text-yellow-800'
                         }`}
                       >
@@ -157,11 +163,20 @@ function Bookings() {
                           ? 'Подтверждено'
                           : booking.status === 'rejected'
                           ? 'Отклонено'
+                          : booking.status === 'completed'
+                          ? 'Завершено'
+                          : booking.status === 'cancelled'
+                          ? 'Отменено'
                           : 'Ожидает подтверждения'}
                       </span>
                     </p>
+                    {booking.admin_comment && (
+                      <p className="mt-2 text-sm text-gray-600">
+                        <strong>Комментарий админа:</strong> {booking.admin_comment}
+                      </p>
+                    )}
                   </div>
-                  {booking.status === 'pending' && (
+                  {(booking.status === 'pending' || booking.status === 'confirmed') && (
                     <button
                       onClick={() => handleCancel(booking.id)}
                       className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm"
