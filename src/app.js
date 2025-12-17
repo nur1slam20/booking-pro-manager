@@ -51,12 +51,21 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Rate limit
+// Rate limit (смягчённый, пропускает публичные GET и health)
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 1000, // увеличено, чтобы исключить ложные 429 при активном UI
   standardHeaders: true,
   legacyHeaders: false,
+  // Пропускаем публичные GET (services, health, root)
+  skip: (req) => {
+    const openGet =
+      req.method === 'GET' &&
+      (req.path.startsWith('/api/services') ||
+        req.path.startsWith('/health') ||
+        req.path === '/');
+    return openGet;
+  },
 });
 app.use('/api', apiLimiter);
 
