@@ -7,6 +7,7 @@ import {
   getAverageRatingService,
   markReviewHelpfulService,
   getReviewRatingDistributionService,
+  getReviewHelpfulStatusService,
 } from './review.service.js';
 
 export async function getReviewsController(req, res, next) {

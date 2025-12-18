@@ -7,7 +7,7 @@ import { errorMiddleware } from './utils/error.js';
 import logger from './utils/logger.js';
 import { specs, swaggerUi } from './config/swagger.js';
 
-// Роутеры (будут созданы ниже)
+// Роутеры 
 import authRouter from './modules/auth/auth.routes.js';
 import userRouter from './modules/users/user.routes.js';
 import serviceRouter from './modules/services/service.routes.js';

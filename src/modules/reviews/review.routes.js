@@ -6,6 +6,9 @@ import {
   updateReviewController,
   deleteReviewController,
   getAverageRatingController,
+  markReviewHelpfulController,
+  getReviewHelpfulStatusController,
+  getRatingDistributionController,
 } from './review.controller.js';
 import { authMiddleware, roleMiddleware } from '../../middleware/auth.js';
 

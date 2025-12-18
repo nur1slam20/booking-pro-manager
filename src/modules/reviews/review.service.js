@@ -183,3 +183,8 @@ export async function getAverageRatingService(masterId = null, serviceId = null)
   return getAverageRating(masterId, serviceId);
 }
 
+export async function getReviewHelpfulStatusService(reviewId, userId) {
+  const { getReviewHelpfulStatus } = await import('./review.repository.js');
+  return getReviewHelpfulStatus(reviewId, userId);
+}
+
