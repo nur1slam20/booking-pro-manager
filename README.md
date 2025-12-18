@@ -80,25 +80,20 @@ createdb booking_db
 
 5. **Выполните миграции**
 ```bash
-npm run migrate
-```
-
-Или вручную:
-```bash
 psql -d booking_db -f migrations/001_create_tables.sql
 ```
 
-6. **Добавьте тестовые услуги** (опционально)
-```bash
-npm run add-services
-```
-
-7. **Создайте тестового админа** (опционально)
+6. **Создайте тестового админа** (опционально)
 ```bash
 ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=admin123456 npm run create-admin
 ```
 
-8. **Запустите сервер**
+Или добавьте скрипт в `package.json`:
+```json
+"create-admin": "node scripts/create-admin.js"
+```
+
+7. **Запустите сервер**
 ```bash
 npm run dev
 ```
@@ -116,23 +111,6 @@ curl http://localhost:3000/
 ```
 
 ## 📚 API Документация
-
-### Swagger UI
-
-Интерактивная документация API доступна по адресу:
-- **Production**: https://booking-pro-api.onrender.com/api-docs
-- **Local**: http://localhost:3000/api-docs
-
-### Postman Collection
-
-Готовая коллекция для импорта в Postman находится в файле:
-- `postman/Booking Manager PRO.postman_collection.json`
-
-**Использование:**
-1. Откройте Postman
-2. Импортируйте файл `postman/Booking Manager PRO.postman_collection.json`
-3. Установите переменную `base_url` на `https://booking-pro-api.onrender.com` (или `http://localhost:3000` для локальной разработки)
-4. Выполните запрос `Login` для получения токена (токен автоматически сохранится в переменную `token`)
 
 ### Основные эндпоинты
 
@@ -209,10 +187,11 @@ curl -X POST http://localhost:3000/api/bookings \
 
 ### Production URLs
 
-- **Backend API**: `https://booking-pro-api.onrender.com`
-- **Frontend UI**: `https://booking-pro-manager.vercel.app`
-- **Swagger UI**: `https://booking-pro-api.onrender.com/api-docs`
-- **Health Check**: `https://booking-pro-api.onrender.com/health`
+После деплоя обновите этот раздел:
+
+- **Backend API**: `https://your-backend-url.onrender.com`
+- **Frontend UI**: `https://your-frontend-url.vercel.app`
+- **Swagger UI**: `https://your-backend-url.onrender.com/api-docs` (если настроен)
 
 ### Тестовые данные
 
@@ -264,9 +243,7 @@ curl -X POST http://localhost:3000/api/auth/register \
 - `npm run dev` - Запуск в режиме разработки (с nodemon)
 - `npm start` - Запуск в production режиме
 - `npm run lint` - Проверка кода через ESLint
-- `npm run create-admin` - Создание администратора
-- `npm run migrate` - Запуск миграций базы данных
-- `npm run add-services` - Добавление тестовых услуг в базу данных
+- `npm run create-admin` - Создание администратора (требует добавления скрипта в package.json)
 
 ## 🔧 Переменные окружения
 

@@ -6,8 +6,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Bookings from './pages/Bookings';
-import Masters from './pages/Masters';
-import Reviews from './pages/Reviews';
 import AdminDashboard from './pages/admin/Dashboard';
 import { authService } from './services/auth';
 
@@ -23,8 +21,6 @@ function App() {
 
   const handleLogin = (userData) => {
     setUser(userData);
-    // Обновляем user в localStorage
-    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
@@ -62,11 +58,6 @@ function App() {
             <Route 
               path="/bookings" 
               element={user ? <Bookings /> : <Navigate to="/login" />} 
-            />
-            <Route path="/masters" element={<Masters />} />
-            <Route 
-              path="/reviews" 
-              element={user ? <Reviews /> : <Navigate to="/login" />} 
             />
             <Route 
               path="/admin" 
