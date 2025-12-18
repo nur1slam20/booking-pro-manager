@@ -8,5 +8,7 @@ export default {
     extend: {},
   },
   plugins: [],
+  // Важно для Vercel - убеждаемся что все классы включены
+  safelist: [],
 }
 
